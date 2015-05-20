@@ -4,6 +4,8 @@ var currentWakeUpTimer = null;
 STATUS_IDLE = 0;
 STATUS_GDNT = 1;
 STATUS_WAKE = 2;
+STATUS_COFFEE = 3;
+STATUS_COFFEE_OFFER = 4;
 
 tmpVolunteer = STATUS_IDLE;
 
@@ -17,6 +19,7 @@ function wakeMeUpTom(msg) {
 
 	currentWakeUpTimer.func = function() {
 		member = "#chatname";
+		member = msg.message.name;
 		currentWakeUpTimer = null;
 		// msg.send((new Date(currentWakeUpTimer.ctime)).toString());
 		msg.send(["Wake up!", member,"\n"].join(" "));
@@ -24,7 +27,7 @@ function wakeMeUpTom(msg) {
 	}
 
 	HOURS_24 =  24 * 60 * 60 * 1000;
-	HOURS_24 =  3 * 1000;
+	HOURS_24 =  5 * 1000;
 	now = new Date();
 	currentWakeUpTimer.ctime = now.getTime() + HOURS_24;
 
@@ -50,17 +53,34 @@ module.exports = function(robot) {
 
 	robot.hear(/yawn/i, function(msg) {
 		if (tmpVolunteer == STATUS_WAKE) {
-			msg.send("Good morning, " + member + ".");
+			msg.reply("Good morning!");
 			msg.send("For breakfast, yogurt is available. How about a cup of coffee?");
-			tmpVolunteer = STATUS_IDLE;
+			tmpVolunteer = STATUS_COFFEE_OFFER;
 		}
 
+	});
+
+	robot.hear(/yes|sure/i, function(msg) {
+		if (tmpVolunteer == STATUS_COFFEE_OFFER) {
+			msg.send("There should still be some coffee beans left.");
+			msg.send("Before you grind the beans, don't forget to use the following ratio for your brew:");
+			msg.send("-- use 300g of hot water for every 20g of coffee beans.");
+			tmpVolunteer = STATUS_COFFEE;
+		}
 	});
 
 	robot.hear(/coffee/i, function(msg) {
 		msg.send("There should still be some coffee beans left.");
 		msg.send("Before you grind the beans, don't forget to use the following ratio for your brew:");
 		msg.send("-- use 300g of hot water for every 20g of coffee beans.");
+		tmpVolunteer = STATUS_COFFEE;
+	});
+
+	robot.hear(/thanks/i, function(msg) {
+		if (tmpVolunteer == STATUS_COFFEE) {
+			msg.send("No sweat. Have a nice day!");
+		}
+		tmpVolunteer = STATUS_IDLE;
 	});
 
 	robot.hear(/yes/i, function(msg) {
@@ -87,7 +107,7 @@ module.exports = function(robot) {
 		}
 	});
 
-	robot.hear(/wake/i, function(msg) {
+	robot.hear(/set wakeup alarm/i, function(msg) {
 		wakeMeUpTom(msg);
 	});
 }
