@@ -82,6 +82,13 @@ module.exports = (robot) ->
         res.reply "You have #{data.value.length} unread message/s:"
         res.send "#{val.From.EmailAddress.Name}: #{val.Subject}" for val in data.value
 
+  robot.hear /analyze sentiments from Weekly Reports/i, (res) ->
+    robot.http("https://outlook.office365.com/api/v1.0/me/folders/AAMkADM4OTEwMmEyLTc0MDQtNDYyYS04OTI0LTRkNTk4MTUwNDVjMwAuAAAAAADTQeIvd0RIQakmXUxMPIYvAQAWL6djGBzrQ4ENCJrvtPWsADsX3QA4AAA=/messages?$top=10")
+      .auth(username, password)
+      .get() (err, response, body) ->
+        data = JSON.parse(body)
+        analyzeSentiment(res, val.From.EmailAddress.Name, val.BodyPreview) for val in data.value
+
   formatTime = (dateTimeStr) ->
     dateObj = new Date(dateTimeStr)
     return dateObj.toLocaleTimeString()
@@ -89,3 +96,10 @@ module.exports = (robot) ->
   formatDate = (dateTimeStr) ->
     dateObj = new Date(dateTimeStr)
     return dateObj.toLocaleDateString()
+
+  analyzeSentiment = (msg, fromName, bodyPreview) ->
+    robot.http("https://loudelement-free-natural-language-processing-service.p.mashape.com/nlp-text/?text=#{bodyPreview}") #TODO escape?
+      .header("X-Mashape-Key", "FUeh4iLLcLmshwe7qxFXzx4f2Xsep1017EXjsnNTMNqT6saZYr")
+      .get() (child_err, child_response, child_body) ->
+        child_data = JSON.parse(child_body)
+        msg.send "#{fromName} is feeling #{child_data['sentiment-text']} (#{child_data['sentiment-score']})."
