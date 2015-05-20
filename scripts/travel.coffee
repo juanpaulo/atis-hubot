@@ -24,6 +24,7 @@ module.exports = (robot) ->
       return "Great weather today, get some tan."
     if szWeather.match /typhoon|hurricane/i 
       return "It is not really a good time to go out for work or play."
+    return "I got nothing to say"
 
   parseLocation = ( szLocation ) ->
     return "Tokyo"
@@ -40,7 +41,7 @@ module.exports = (robot) ->
          data = JSON.parse(body)
          res.send "\n#{szLocation}'s weather for the week.\n----"
          for aggDay in data
-           res.send "#{aggDay.day_of_week} : #{aggDay.condition}"
+           res.send "#{aggDay.day_of_week} : #{aggDay.condition} \n  #{parseWeather(aggDay.condition)}"
 
 
   robot.respond /open the (.*) doors/i, (res) ->
